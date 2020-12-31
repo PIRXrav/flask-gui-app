@@ -167,7 +167,8 @@ class ApplicationFrame():
 
         script = ('<script src="//cdnjs.cloudflare.com/ajax/libs/socket.io/2.2.0/socket.io.js" integrity="sha256-yr4fRk/GU1ehYJPAs8P4JlTgu0Hdsp4ZKrx8bDEDC3I=" crossorigin="anonymous"></script>\n'
                   '<script type="text/javascript">\n'
-                  'var socket = io.connect(null, {port: location.port, rememberTransport: false});\n'
+                  '//var socket = io.connect(null, {port: location.port, rememberTransport: false});\n'
+                  'var socket = io();\n'
                   "socket.on( 'connect', function(data) {\n"
                   "    console.log('On connect :'+ data)\n"
                   "    socket.emit( 'debug', 'User Connected')\n"
@@ -299,7 +300,8 @@ class Application:
         logger.info("[Application] client debug: " + data)
 
     def run(self, debug=False):
-        self.socketio.run(self.app, debug=debug, port=8008)
+        #  host="0.0.0.0" , debug=False
+        self.socketio.run(self.app, debug=debug, port=5000)
 
 
 if __name__ == '__main__':
