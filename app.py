@@ -46,13 +46,13 @@ class Obj:
         logger.error("Unimplemented method !")
         return ""
 
-    def to_js_getter(self):
-        # pylint: disable=no-self-use
+    @staticmethod
+    def to_js_getter():
         """ return js callback """
         return ""
 
-    def to_js_setter(self):
-        # pylint: disable=no-self-use
+    @staticmethod
+    def to_js_setter():
         """ return js setter """
         return ""
 
@@ -63,19 +63,22 @@ class Obj:
     def __str__(self):
         return f"{self.__class__.__name__}::{self.name}({self.value})"
 
+
 class ObjInputText(Obj):
     """ std input text """
 
     def to_html(self):
         """ return html entry """
-        return '<input type="text" class="form-control" id="'+self.name+'" placeholder="msg"/>'
+        return '<input type="text" class="form-control ObjInputText" id="'+self.name+'" placeholder="msg"/>'
 
-    def to_js_getter(self):
+    @staticmethod
+    def to_js_getter():
         """ return js callback """
-        return "var "+self.name+"obj = $('#"+self.name+"').on('change', function() {\n"  + \
-               "   text = $('#"+self.name+"').val()\n" + \
-               "   console.log('"+self.name+"modif: ' + text)\n" + \
-               "   socket.emit('user_event', { 'name': '"+self.name+"', 'data': text})\n" + \
+        return "$('.ObjInputText').on('change', function(event) {\n"  + \
+               "   id = $(event.target).attr('id')\n" + \
+               "   value = $(event.target).val()\n" + \
+               "   console.log('ObjInputText::'+id+':text=' + value)\n" + \
+               "   socket.emit('user_event', { 'name': id, 'data': value})\n" + \
                "})\n"
 
 
@@ -87,13 +90,16 @@ class ObjButton(Obj):
 
     def to_html(self):
         """ return html entry """
-        return '<button type="button" class="btn btn-primary btn-lg" id="'+self.name+'">'+self.name+'</button>'
+        return '<button type="button" class="btn btn-primary btn-lg ObjButton" id="'+self.name+'">'+self.name+'</button>'
 
-    def to_js_getter(self):
+    @staticmethod
+    def to_js_getter():
         """ return js callback """
-        return "var "+self.name+"obj = $('#"+self.name+"').on('click', function() {\n"  + \
-               "   console.log('"+self.name+" clicked')\n" + \
-               "   socket.emit('user_event', { 'name': '"+self.name+"', 'data': 'x'})\n" + \
+        return "// ObjButton getter\n" + \
+               "$('.ObjButton').on('click', function(event) {\n"  + \
+               "   id = $(event.target).attr('id')\n" + \
+               "   console.log('ObjButton::'+id+':clicked')\n" + \
+               "   socket.emit('user_event', { 'name': id, 'data': 'butt'})\n" + \
                "})\n"
 
     def callback(self, value):
@@ -162,7 +168,8 @@ class ApplicationFrame():
             # print("DIV:" + str(div))
             self._create_widget(div)
         # apprend script
-        getters = "".join(map(lambda o: o.to_js_getter(), self.widgets.values()))
+        class_used = set((obj.__class__ for obj in self.widgets.values()))  # no duplic
+        getters = "".join(map(lambda c: c.to_js_getter(), class_used))
         setters = "".join(map((lambda i: "case '"+i[0]+"':\n"+i[1].to_js_setter()+"break;\n"), self.widgets.items()))
 
         script = ('<script src="//cdnjs.cloudflare.com/ajax/libs/socket.io/2.2.0/socket.io.js" integrity="sha256-yr4fRk/GU1ehYJPAs8P4JlTgu0Hdsp4ZKrx8bDEDC3I=" crossorigin="anonymous"></script>\n'
